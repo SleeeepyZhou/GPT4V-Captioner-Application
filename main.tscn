@@ -379,9 +379,9 @@ expand_to_text_length = true
 visible = false
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
-text = "使用其他打标器(如WD1.4)对图片进行打标后，在上方prompt中使用“Describe this image in a very detailed manner and refer these prompt tags:{大括号里替换为放置额外tags文件的目录，会自动读取和图片同名txt。比如 D:\\ abc\\}\"
+text = "使用其他打标器(如WD1.4)对图片进行打标后，在上方prompt中使用“Describe this image in a very detailed manner and refer these prompt tags:{大括号里替换为放置额外tags文件的目录，会自动读取和图片同名txt。比如 D:/abc/}\"
 After marking the image using other captioner(such as WD1.4), enter the prompt in the marks in the prompt box.
-Describe this image in a very detailed manner and refer these prompt tags: {This is the txt file path for captions, will automatically read the txt file with the same name as the image. For example, D: \\ abc\\}
+Describe this image in a very detailed manner and refer these prompt tags: {This is the txt file path for captions, will automatically read the txt file with the same name as the image. For example, D: /abc/}
                     "
 editable = false
 wrap_mode = 1
@@ -649,6 +649,7 @@ bbcode_enabled = true
 text = "Developers: [b][url=https://civitai.com/user/jiayev1]Jiaye[/url]，[url=https://civitai.com/user/LEOSAM]LEOSAM 是只兔狲[/url]，[url=https://github.com/SleeeepyZhou]SleeeepyZhou[/url]，[url=https://civitai.com/user/fok3827]Fok[/url]，[url=https://github.com/327]327[/url]，[url=https://space.bilibili.com/893892]十字鱼[/url]，[url=https://weibo.com/u/6575812492]Vanetta[/url][/b],Welcome everyone to add more new features to this project."
 fit_content = true
 
+[connection signal="request_completed" from="Main/Demo/ApiUtils" to="Main/Demo/ApiUtils" method="_on_request_completed"]
 [connection signal="pressed" from="Main/Demo/PromptSave/Save" to="Main/Demo" method="_prompt_save_pressed"]
 [connection signal="pressed" from="Main/Demo/PromptSave/Delete" to="Main/Demo" method="_prompt_delete_pressed"]
 [connection signal="pressed" from="Main/Demo/PromptSave/Load" to="Main/Demo" method="_prompt_load_pressed"]

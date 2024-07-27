@@ -22,11 +22,12 @@ func _update():
 	api_url = $"../ApiInput/ApiURL".text
 	api_key = $"../ApiInput/ApiKey".text
 	api_mod = $"../ApiInput/APIMod".text
-	_quality = $"../ApiInput/ImageQ".selected
+	_quality = $"../ApiInput/ImageQ".text
 	time_out = $"../ApiInput/Timeout".value
 	prompt = $"../Prompt".text
 
 const API_TYPE = ["gpt-4o", "qwen-vl-plus", "qwen-vl-max", "claude", "local", "???"]
+const RETRY_ATTEMPTS = 5
 
 func is_api_id(url : String) -> int:
 	if url.ends_with("/v1/services/aigc/multimodal-generation/generation"):
@@ -55,16 +56,36 @@ func api_save():
 	else:
 		dir["api"][mod] = [false, api_url, api_key]
 
-func run_api():
+func _on_request_completed(result, response_code, headers, body):
+	pass
+
+func run_api(image_path: String):
+	api_save()
+	var current_prompt = addition_prompt(prompt, image_path)
+
+func qwen_api():
+	pass
+
+func claude_api():
+	pass
+
+func openai_api():
 	pass
 
 func addition_prompt(text : String, image_path : String):
 	if '{' not in text and '}' not in text:
 		return prompt
-	var _name = image_path.get_basename().erase(0,image_path.get_base_dir().length()+1)
-	var file_name = _name + ".txt"
+	var file_name = image_path.get_file().rstrip("." + image_path.get_extension()) + ".txt"
 	var dir_path = text.substr(text.find("{")+1, text.find("}")-text.find("{")-1)
-	var full_path = dir_path
+	var full_path = (dir_path + "/" + file_name).simplify_path()
+	var file = FileAccess.open(full_path, FileAccess.READ)
+	var file_content := ""
+	if file:
+		file_content = file.get_as_text()
+		file.close()
+	else:
+		return "Error reading file: Could not open file."
+	return text.replace("{" + dir_path + "}", file_content)
 
 func _api_switch_pressed():
 	var mod = API_TYPE[$"../Tab/API Config/API Config/API/Box/ApiList".selected]
