@@ -1,0 +1,657 @@
+[gd_scene load_steps=4 format=3 uid="uid://cvcr6osoyl86q"]
+
+[ext_resource type="Theme" uid="uid://cichl1ubkv6ux" path="res://Resources/main_theme.tres" id="1_chhr7"]
+[ext_resource type="Script" path="res://Lib/Main.gd" id="2_1txu2"]
+[ext_resource type="Script" path="res://Lib/ApiUtils.gd" id="3_savia"]
+
+[node name="Main" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_chhr7")
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 40
+
+[node name="Main" type="ScrollContainer" parent="."]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Demo" type="VBoxContainer" parent="Main"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("2_1txu2")
+
+[node name="ApiUtils" type="HTTPRequest" parent="Main/Demo"]
+script = ExtResource("3_savia")
+
+[node name="Title" type="Label" parent="Main/Demo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 25
+text = "GPT4V captioner"
+horizontal_alignment = 1
+
+[node name="ApiInput" type="HBoxContainer" parent="Main/Demo"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+text = "API URL"
+
+[node name="ApiURL" type="LineEdit" parent="Main/Demo/ApiInput"]
+custom_minimum_size = Vector2(350, 35)
+layout_mode = 2
+text = "https://api.openai.com/v1/chat/completions"
+placeholder_text = "Enter the GPT-4-Vision API URL here"
+
+[node name="Label2" type="Label" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+text = "API Key"
+
+[node name="ApiKey" type="LineEdit" parent="Main/Demo/ApiInput"]
+custom_minimum_size = Vector2(250, 35)
+layout_mode = 2
+placeholder_text = "Enter your GPT-4-Vision API Key here"
+expand_to_text_length = true
+secret = true
+
+[node name="Label3" type="Label" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+text = "API Model"
+
+[node name="APIMod" type="OptionButton" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+
+[node name="Label4" type="Label" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+text = "Image Quality"
+
+[node name="ImageQ" type="OptionButton" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+item_count = 3
+selected = 0
+popup/item_0/text = "auto"
+popup/item_0/id = 0
+popup/item_1/text = "high"
+popup/item_1/id = 1
+popup/item_2/text = "low"
+popup/item_2/id = 2
+
+[node name="Label5" type="Label" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+text = "Timeout (s)"
+
+[node name="Timeout" type="SpinBox" parent="Main/Demo/ApiInput"]
+layout_mode = 2
+min_value = 10.0
+value = 10.0
+
+[node name="Label" type="Label" parent="Main/Demo"]
+layout_mode = 2
+text = "Prompt / 打标需求"
+
+[node name="Prompt" type="TextEdit" parent="Main/Demo"]
+custom_minimum_size = Vector2(0, 145)
+layout_mode = 2
+text = "As an AI image tagging expert, please provide precise tags for these images to enhance CLIP model's understanding of the content. Employ succinct keywords or phrases, steering clear of elaborate sentences and extraneous conjunctions. Prioritize the tags by relevance. Your tags should capture key elements such as the main subject, setting, artistic style, composition, image quality, color tone, filter, and camera specifications, and any other tags crucial for the image. When tagging photos of people, include specific details like gender, nationality, attire, actions, pose, expressions, accessories, makeup, composition type, age, etc. For other image categories, apply appropriate and common descriptive tags as well. Recognize and tag any celebrities, well-known landmark or IPs if clearly featured in the image. Your tags should be accurate, non-duplicative, and within a 20-75 word count range. These tags will use for image re-creation, so the closer the resemblance to the original image, the better the tag quality. Tags should be comma-separated. Exceptional tagging will be rewarded with $10 per image."
+placeholder_text = "Enter a descriptive prompt"
+wrap_mode = 1
+autowrap_mode = 2
+
+[node name="PromptSave" type="HBoxContainer" parent="Main/Demo"]
+layout_mode = 2
+
+[node name="PromptList" type="OptionButton" parent="Main/Demo/PromptSave"]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 4
+fit_to_longest_item = false
+
+[node name="Save" type="Button" parent="Main/Demo/PromptSave"]
+layout_mode = 2
+text = "Save Prompt"
+
+[node name="Delete" type="Button" parent="Main/Demo/PromptSave"]
+layout_mode = 2
+text = "Delete Prompt"
+
+[node name="Load" type="Button" parent="Main/Demo/PromptSave"]
+layout_mode = 2
+text = "Load Prompt"
+
+[node name="Tab" type="TabContainer" parent="Main/Demo"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Image Process" type="TabContainer" parent="Main/Demo/Tab"]
+layout_mode = 2
+
+[node name="Image Zip" type="MarginContainer" parent="Main/Demo/Tab/Image Process"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="Box" type="VBoxContainer" parent="Main/Demo/Tab/Image Process/Image Zip"]
+layout_mode = 2
+
+[node name="Warning" type="RichTextLabel" parent="Main/Demo/Tab/Image Process/Image Zip/Box"]
+layout_mode = 2
+bbcode_enabled = true
+text = "⚠ [b]Warning / 警告[/b]: This preprocessing process will resize and compress all image files into jpg format with a total pixel count ≤ 1024×1024 while maintaining the original aspect ratio, ensuring that both dimensions are multiples of 32. [b]Please make sure to backup your original files before processing![/b] This procedure can reduce the size of the training set, help to speed up the labeling process, and decrease the time taken to cache latents to disk during training.
+本预处理过程将会在保持原图长宽比情况下，把所有图像文件裁剪压缩为总像素≤1024×1024的jpg文件，并且长宽像素均为32的倍数。[b]请务必在处理前备份源文件！[/b]该过程可以缩小训练集体积，有助于加快打标速度，并缩短训练过程中的Cache latents to disk时间。"
+fit_content = true
+
+[node name="Run" type="HBoxContainer" parent="Main/Demo/Tab/Image Process/Image Zip/Box"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Image Process/Image Zip/Box/Run"]
+layout_mode = 2
+text = "Image Folder Path"
+
+[node name="ImagePath" type="LineEdit" parent="Main/Demo/Tab/Image Process/Image Zip/Box/Run"]
+layout_mode = 2
+placeholder_text = "Enter the folder path containing images / 输入包含图像的文件夹路径"
+expand_to_text_length = true
+
+[node name="RunZip" type="Button" parent="Main/Demo/Tab/Image Process/Image Zip/Box/Run"]
+layout_mode = 2
+text = "Process Images"
+
+[node name="OutPut" type="HBoxContainer" parent="Main/Demo/Tab/Image Process/Image Zip/Box"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Image Process/Image Zip/Box/OutPut"]
+layout_mode = 2
+text = "Image Processing Output"
+
+[node name="ProcessOutput" type="LineEdit" parent="Main/Demo/Tab/Image Process/Image Zip/Box/OutPut"]
+layout_mode = 2
+placeholder_text = "Image Processing Output"
+editable = false
+expand_to_text_length = true
+
+[node name="Single Image" type="MarginContainer" parent="Main/Demo/Tab/Image Process"]
+visible = false
+layout_mode = 2
+
+[node name="SingleImage" type="VBoxContainer" parent="Main/Demo/Tab/Image Process/Single Image"]
+layout_mode = 2
+
+[node name="UpOut" type="HSplitContainer" parent="Main/Demo/Tab/Image Process/Single Image/SingleImage"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ImageUp" type="TextureRect" parent="Main/Demo/Tab/Image Process/Single Image/SingleImage/UpOut"]
+custom_minimum_size = Vector2(512, 0)
+layout_mode = 2
+expand_mode = 5
+stretch_mode = 4
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Image Process/Single Image/SingleImage/UpOut/ImageUp"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Plz drop image"
+
+[node name="Output" type="TextEdit" parent="Main/Demo/Tab/Image Process/Single Image/SingleImage/UpOut"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+placeholder_text = "Caption Output / 标签输出"
+editable = false
+
+[node name="Caption" type="Button" parent="Main/Demo/Tab/Image Process/Single Image/SingleImage"]
+layout_mode = 2
+text = "Caption Single Image"
+
+[node name="Batch Image" type="MarginContainer" parent="Main/Demo/Tab/Image Process"]
+visible = false
+layout_mode = 2
+
+[node name="Batch Image" type="VBoxContainer" parent="Main/Demo/Tab/Image Process/Batch Image"]
+layout_mode = 2
+
+[node name="InputPath" type="HBoxContainer" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image/InputPath"]
+layout_mode = 2
+text = "Batch Directory"
+
+[node name="Path" type="LineEdit" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image/InputPath"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter the directory path containing images for batch processing"
+
+[node name="HandlingMode" type="HBoxContainer" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image/HandlingMode"]
+layout_mode = 2
+text = "If a caption file exists: "
+
+[node name="Mode" type="OptionButton" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image/HandlingMode"]
+layout_mode = 2
+item_count = 4
+selected = 0
+popup/item_0/text = "overwrite"
+popup/item_0/id = 0
+popup/item_1/text = "prepend"
+popup/item_1/id = 1
+popup/item_2/text = "append"
+popup/item_2/id = 2
+popup/item_3/text = "skip"
+popup/item_3/id = 3
+
+[node name="Button" type="HBoxContainer" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image"]
+layout_mode = 2
+
+[node name="Run" type="Button" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image/Button"]
+layout_mode = 2
+text = "Batch Processing Output"
+
+[node name="Stop" type="Button" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image/Button"]
+layout_mode = 2
+text = "Stop Batch Processing"
+
+[node name="Output" type="LineEdit" parent="Main/Demo/Tab/Image Process/Batch Image/Batch Image/Button"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "Status Out"
+editable = false
+
+[node name="Failed File Screening" type="MarginContainer" parent="Main/Demo/Tab/Image Process"]
+visible = false
+layout_mode = 2
+
+[node name="Failed File Screening" type="VBoxContainer" parent="Main/Demo/Tab/Image Process/Failed File Screening"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Image Process/Failed File Screening/Failed File Screening"]
+layout_mode = 2
+text = "Folder Input"
+
+[node name="FailedPath" type="LineEdit" parent="Main/Demo/Tab/Image Process/Failed File Screening/Failed File Screening"]
+layout_mode = 2
+placeholder_text = "Enter the directory path"
+
+[node name="Label2" type="Label" parent="Main/Demo/Tab/Image Process/Failed File Screening/Failed File Screening"]
+layout_mode = 2
+text = "Keywords (optional)"
+
+[node name="Keywords" type="LineEdit" parent="Main/Demo/Tab/Image Process/Failed File Screening/Failed File Screening"]
+layout_mode = 2
+placeholder_text = "Enter keywords, e.g., sorry,error"
+
+[node name="Output" type="HBoxContainer" parent="Main/Demo/Tab/Image Process/Failed File Screening/Failed File Screening"]
+layout_mode = 2
+
+[node name="Run" type="Button" parent="Main/Demo/Tab/Image Process/Failed File Screening/Failed File Screening/Output"]
+layout_mode = 2
+text = "Run Script"
+
+[node name="ScriptOutput" type="LineEdit" parent="Main/Demo/Tab/Image Process/Failed File Screening/Failed File Screening/Output"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Script Output"
+editable = false
+
+[node name="Extra Function" type="MarginContainer" parent="Main/Demo/Tab"]
+visible = false
+layout_mode = 2
+
+[node name="Extra Function" type="VBoxContainer" parent="Main/Demo/Tab/Extra Function"]
+layout_mode = 2
+
+[node name="Warning" type="RichTextLabel" parent="Main/Demo/Tab/Extra Function/Extra Function"]
+layout_mode = 2
+text = " 以下功能基于CogVLM开发（GPT4未经测试），极力推荐使用CogVLM-vqa以达到最佳效果。
+ This function is developed based on CogVLM (GPT4 not tested), and it is strongly recommended to use CogVLM-vqa for optimal results."
+fit_content = true
+
+[node name="Tab" type="TabContainer" parent="Main/Demo/Tab/Extra Function/Extra Function"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Watermark Detection" type="MarginContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab"]
+layout_mode = 2
+
+[node name="Watermark Detection" type="VBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection"]
+layout_mode = 2
+
+[node name="PathInput" type="HBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/PathInput"]
+layout_mode = 2
+text = "Image Directory"
+
+[node name="ImagePath" type="LineEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/PathInput"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter the directory path containing images for batch processing"
+
+[node name="PathOutput" type="HBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/PathOutput"]
+layout_mode = 2
+text = "Watermark Detected Image Directory"
+
+[node name="OutPath" type="LineEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/PathOutput"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter the directory path to move/copy detected images"
+
+[node name="HandlingMode" type="OptionButton" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/PathOutput"]
+layout_mode = 2
+item_count = 2
+selected = 0
+popup/item_0/text = "move"
+popup/item_0/id = 0
+popup/item_1/text = "copy"
+popup/item_1/id = 1
+
+[node name="Button" type="HBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection"]
+layout_mode = 2
+alignment = 1
+
+[node name="Run" type="Button" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/Button"]
+layout_mode = 2
+text = "Batch Detect Images"
+
+[node name="Stop" type="Button" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/Button"]
+layout_mode = 2
+text = "Stop Batch Processing"
+
+[node name="Output" type="LineEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Watermark Detection/Watermark Detection/Button"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "Output"
+editable = false
+expand_to_text_length = true
+
+[node name="Tag Polishing" type="TextEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab"]
+visible = false
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+text = "使用其他打标器(如WD1.4)对图片进行打标后，在上方prompt中使用“Describe this image in a very detailed manner and refer these prompt tags:{大括号里替换为放置额外tags文件的目录，会自动读取和图片同名txt。比如 D:\\ abc\\}\"
+After marking the image using other captioner(such as WD1.4), enter the prompt in the marks in the prompt box.
+Describe this image in a very detailed manner and refer these prompt tags: {This is the txt file path for captions, will automatically read the txt file with the same name as the image. For example, D: \\ abc\\}
+                    "
+editable = false
+wrap_mode = 1
+
+[node name="Image filtering" type="MarginContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab"]
+visible = false
+layout_mode = 2
+
+[node name="Image filtering" type="VBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Tips" type="RichTextLabel" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering"]
+layout_mode = 2
+text = "使用自定义规则筛选图片，将回答中包含或不包含对应词的图片放入对应规则的文件夹中。输出目录默认在源目录下的classify_output文件夹下。
+Use custom rules to filter images. Place images containing or not containing corresponding words in the corresponding rule folder in the answer. Output Directory default in source directory \\classify_output."
+fit_content = true
+
+[node name="Input" type="HBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Input"]
+layout_mode = 2
+text = "Input Image Directory"
+
+[node name="ImagePath" type="LineEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Input"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+placeholder_text = "Enter the directory path"
+expand_to_text_length = true
+
+[node name="Label2" type="Label" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Input"]
+layout_mode = 2
+text = "Output Directory"
+
+[node name="OutputPath" type="LineEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Input"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+placeholder_text = "Default source directory"
+expand_to_text_length = true
+
+[node name="Button" type="HBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering"]
+layout_mode = 2
+
+[node name="Addrule" type="Button" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Button"]
+layout_mode = 2
+text = "+ Row"
+
+[node name="Label3" type="Label" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Button"]
+layout_mode = 2
+text = "If meets"
+
+[node name="HandlingMode" type="OptionButton" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Button"]
+layout_mode = 2
+item_count = 2
+selected = 0
+popup/item_0/text = "move"
+popup/item_0/id = 0
+popup/item_1/text = "copy"
+popup/item_1/id = 1
+
+[node name="Run" type="Button" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Button"]
+layout_mode = 2
+text = "Run"
+
+[node name="Stop" type="Button" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Button"]
+layout_mode = 2
+text = "Stop Batch Processing"
+
+[node name="Output" type="LineEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Button"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+placeholder_text = "Satus Output"
+editable = false
+
+[node name="Rulebox" type="ScrollContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Rules" type="VBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Rulebox"]
+layout_mode = 2
+
+[node name="Rule1" type="HBoxContainer" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Rulebox/Rules"]
+layout_mode = 2
+
+[node name="Rule" type="OptionButton" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Rulebox/Rules/Rule1"]
+layout_mode = 2
+item_count = 2
+selected = 0
+popup/item_0/text = "Involve"
+popup/item_0/id = 0
+popup/item_1/text = "Exclude"
+popup/item_1/id = 1
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Rulebox/Rules/Rule1"]
+layout_mode = 2
+text = "Key Word"
+
+[node name="Keyword" type="LineEdit" parent="Main/Demo/Tab/Extra Function/Extra Function/Tab/Image filtering/Image filtering/Rulebox/Rules/Rule1"]
+layout_mode = 2
+placeholder_text = "Enter the words you need to filter"
+expand_to_text_length = true
+
+[node name="Tag Manage" type="MarginContainer" parent="Main/Demo/Tab"]
+visible = false
+layout_mode = 2
+
+[node name="Tag Manage" type="VBoxContainer" parent="Main/Demo/Tab/Tag Manage"]
+layout_mode = 2
+
+[node name="Input" type="HBoxContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Input"]
+layout_mode = 2
+text = "Folder Path"
+
+[node name="Path" type="LineEdit" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Input"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+placeholder_text = "Enter folder path"
+
+[node name="Label3" type="Label" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Input"]
+layout_mode = 2
+text = "Top N Tags"
+
+[node name="TopN" type="SpinBox" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Input"]
+layout_mode = 2
+min_value = 1.0
+max_value = 900.0
+value = 100.0
+allow_greater = true
+
+[node name="Run" type="Button" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Input"]
+layout_mode = 2
+text = "Process Tags"
+
+[node name="Output" type="LineEdit" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Input"]
+layout_mode = 2
+placeholder_text = "Output Message"
+expand_to_text_length = true
+
+[node name="Newbox" type="HBoxContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Newbox"]
+layout_mode = 2
+text = "Translate Tags to Chinese"
+
+[node name="Translate" type="OptionButton" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Newbox"]
+layout_mode = 2
+item_count = 3
+selected = 2
+popup/item_0/text = "GPT-3.5 translation"
+popup/item_0/id = 0
+popup/item_1/text = "Free translation"
+popup/item_1/id = 1
+popup/item_2/text = "No translation"
+popup/item_2/id = 2
+
+[node name="NewTag" type="LineEdit" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Newbox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="Add" type="Button" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Newbox"]
+layout_mode = 2
+text = "Add New Tag"
+
+[node name="Taginformation" type="HSplitContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Word Cloud" type="VBoxContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/Word Cloud"]
+layout_mode = 2
+text = "Word Cloud"
+
+[node name="Word Cloud" type="TextureRect" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/Word Cloud"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TagsBox" type="MarginContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation"]
+layout_mode = 2
+
+[node name="Tags" type="ScrollContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/TagsBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Tags" type="VBoxContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/TagsBox/Tags"]
+layout_mode = 2
+
+[node name="Tag1" type="HBoxContainer" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/TagsBox/Tags/Tags"]
+layout_mode = 2
+
+[node name="Tag" type="LineEdit" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/TagsBox/Tags/Tags/Tag1"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "Example Tag"
+editable = false
+
+[node name="Remove" type="Button" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/TagsBox/Tags/Tags/Tag1"]
+layout_mode = 2
+text = "Tags to Remove"
+
+[node name="Replace" type="Button" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/TagsBox/Tags/Tags/Tag1"]
+layout_mode = 2
+text = "Tags to Replace"
+
+[node name="LineEdit" type="LineEdit" parent="Main/Demo/Tab/Tag Manage/Tag Manage/Taginformation/TagsBox/Tags/Tags/Tag1"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "Enter tags to replace"
+expand_to_text_length = true
+
+[node name="API Config" type="MarginContainer" parent="Main/Demo/Tab"]
+visible = false
+layout_mode = 2
+
+[node name="API Config" type="TabContainer" parent="Main/Demo/Tab/API Config"]
+layout_mode = 2
+
+[node name="API" type="VBoxContainer" parent="Main/Demo/Tab/API Config/API Config"]
+layout_mode = 2
+
+[node name="Box" type="HBoxContainer" parent="Main/Demo/Tab/API Config/API Config/API"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/API Config/API Config/API/Box"]
+layout_mode = 2
+text = "Choose API"
+
+[node name="ApiList" type="OptionButton" parent="Main/Demo/Tab/API Config/API Config/API/Box"]
+layout_mode = 2
+
+[node name="Switch" type="Button" parent="Main/Demo/Tab/API Config/API Config/API/Box"]
+layout_mode = 2
+text = "Switch"
+
+[node name="Default" type="Button" parent="Main/Demo/Tab/API Config/API Config/API/Box"]
+layout_mode = 2
+text = "Set as default"
+
+[node name="ApiState" type="LineEdit" parent="Main/Demo/Tab/API Config/API Config/API/Box"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "API State"
+editable = false
+expand_to_text_length = true
+
+[node name="Local Model" type="VBoxContainer" parent="Main/Demo/Tab/API Config/API Config"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Main/Demo/Tab/API Config/API Config/Local Model"]
+layout_mode = 2
+text = "Users need to start the API script."
+
+[node name="Thank" type="RichTextLabel" parent="Main/Demo"]
+layout_mode = 2
+bbcode_enabled = true
+text = "Developers: [b][url=https://civitai.com/user/jiayev1]Jiaye[/url]，[url=https://civitai.com/user/LEOSAM]LEOSAM 是只兔狲[/url]，[url=https://github.com/SleeeepyZhou]SleeeepyZhou[/url]，[url=https://civitai.com/user/fok3827]Fok[/url]，[url=https://github.com/327]327[/url]，[url=https://space.bilibili.com/893892]十字鱼[/url]，[url=https://weibo.com/u/6575812492]Vanetta[/url][/b],Welcome everyone to add more new features to this project."
+fit_content = true
+
+[connection signal="pressed" from="Main/Demo/PromptSave/Save" to="Main/Demo" method="_prompt_save_pressed"]
+[connection signal="pressed" from="Main/Demo/PromptSave/Delete" to="Main/Demo" method="_prompt_delete_pressed"]
+[connection signal="pressed" from="Main/Demo/PromptSave/Load" to="Main/Demo" method="_prompt_load_pressed"]
+[connection signal="pressed" from="Main/Demo/Tab/API Config/API Config/API/Box/Switch" to="Main/Demo/ApiUtils" method="_api_switch_pressed"]
+[connection signal="pressed" from="Main/Demo/Tab/API Config/API Config/API/Box/Default" to="Main/Demo/ApiUtils" method="_set_api_default_pressed"]
+[connection signal="meta_clicked" from="Main/Demo/Thank" to="Main/Demo" method="_on_thank_meta_clicked"]
