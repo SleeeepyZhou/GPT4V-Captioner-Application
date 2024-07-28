@@ -2,8 +2,8 @@ extends HTTPRequest
 
 var api_url : String
 var api_key : String
-var api_mod : String
-var _quality : int
+var api_mod : int
+var _quality : String
 var time_out : int
 var prompt : String
 
@@ -21,7 +21,7 @@ func _ready():
 func _update():
 	api_url = $"../ApiInput/ApiURL".text
 	api_key = $"../ApiInput/ApiKey".text
-	api_mod = $"../ApiInput/APIMod".text
+	api_mod = $"../ApiInput/APIMod".selected
 	_quality = $"../ApiInput/ImageQ".text
 	time_out = $"../ApiInput/Timeout".value
 	prompt = $"../Prompt".text
@@ -32,7 +32,7 @@ const RETRY_ATTEMPTS = 5
 func is_api_id(url : String) -> int:
 	if url.ends_with("/v1/services/aigc/multimodal-generation/generation"):
 		return 1
-	elif url.ends_with("v1/messages") or ("claude" in api_mod.to_lower()):
+	elif url.ends_with("v1/messages") or (API_TYPE[api_mod] == "claude"):
 		return 3
 	elif url.begins_with("http://127.0.0.1"):
 		return 4
@@ -43,8 +43,8 @@ func is_api_id(url : String) -> int:
 func api_save():
 	_update()
 	var mod : String = API_TYPE[is_api_id(api_url)]
-	if api_mod.begins_with("qwen") and mod.begins_with("qwen"):
-		mod = api_mod
+	if API_TYPE[api_mod].begins_with("qwen") and mod.begins_with("qwen"):
+		mod = API_TYPE[api_mod]
 	var dir = Global.readjson()
 	if dir["api"].has(mod):
 		var is_de := false
