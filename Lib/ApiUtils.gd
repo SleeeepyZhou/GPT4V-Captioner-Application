@@ -1,4 +1,4 @@
-extends HTTPRequest
+extends Node
 
 var api_url : String
 var api_key : String
@@ -56,15 +56,74 @@ func api_save():
 	else:
 		dir["api"][mod] = [false, api_url, api_key]
 
-func _on_request_completed(result, response_code, headers, body):
-	pass
-
 func run_api(image_path: String):
 	api_save()
+	var image = Global.image_to_base64(image_path)
 	var current_prompt = addition_prompt(prompt, image_path)
 
 func qwen_api():
 	pass
+
+
+##func qwen_api(image_path, prompt, api_key):
+	## 设置环境变量
+	#os.environ['DASHSCOPE_API_KEY'] = api_key
+#
+	## 构造请求体
+	#var request_body = JSON.stringify({
+		#"model": QWEN_MOD,
+		#"input": {
+			#"messages": [
+				#{
+					#"role": "system",
+					#"content": [
+						#{"text": "You are a helpful assistant."}
+					#]
+				#},
+				#{
+					#"role": "user",
+					#"content": [
+						#{"image": "file://" + image_path},
+						#{"text": prompt}
+					#]
+				#}
+			#]
+		#}
+	#})
+#
+	## 创建HTTP请求对象
+	#var http_request = HTTPRequest.new()
+	#http_request.set_method("POST")
+	#http_request.set_uri(DASHSCOPE_API_URL)
+	#http_request.set_header("Content-Type", "application/json")
+	#http_request.set_header("Authorization", "Bearer " + api_key)
+	#http_request.set_body(request_body)
+#
+	## 发送HTTP请求
+	#http_request.connect("response_received", self, "_on_http_response_received")
+	#HTTPClient.new().request(http_request)
+#
+## 处理HTTP响应
+#func _on_http_response_received(http_request, response):
+	#if response.get_error() == OK:
+		#var json_result = JSON.parse(response.get_body())
+		#if '"status_code": 400' in json_result:
+			#print("API error: " + json_result)
+			#return
+		#if json_result.get("output") and json_result["output"].get("choices") and json_result["output"]["choices"][0].get("message") and json_result["output"]["choices"][0]["message"].get("content"):
+			#var content = json_result["output"]["choices"][0]["message"]["content"]
+			#if content[0].get("text", False):
+				#print(content[0]["text"])
+			#else:
+				#var box_value = content[0]["box"]
+				#var text_value = content[1]["text"]
+				#var b_value = re_search(r"<ref>(.*?)</ref>", box_value).get_group(1)
+				#print(b_value + text_value)
+		#else:
+			#print(json_result)
+	#else:
+		#print("Error:", response.get_error_message())
+##
 
 func claude_api():
 	pass

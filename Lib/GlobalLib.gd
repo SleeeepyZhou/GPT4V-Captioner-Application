@@ -30,4 +30,7 @@ func readjson():
 		zerojson()
 		var save_data = readjson()
 		return save_data
-		
+
+func image_to_base64(path : String, qu : float = 1):
+	var image = Image.load_from_file(path)
+	return Marshalls.raw_to_base64(image.save_jpg_to_buffer(qu))
