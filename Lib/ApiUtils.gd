@@ -56,6 +56,21 @@ func api_save():
 	else:
 		dir["api"][mod] = [false, api_url, api_key]
 
+func addition_prompt(text : String, image_path : String):
+	if '{' not in text and '}' not in text:
+		return prompt
+	var file_name = image_path.get_file().rstrip("." + image_path.get_extension()) + ".txt"
+	var dir_path = text.substr(text.find("{")+1, text.find("}")-text.find("{")-1)
+	var full_path = (dir_path + "/" + file_name).simplify_path()
+	var file = FileAccess.open(full_path, FileAccess.READ)
+	var file_content := ""
+	if file:
+		file_content = file.get_as_text()
+		file.close()
+	else:
+		return "Error reading file: Could not open file."
+	return text.replace("{" + dir_path + "}", file_content)
+
 func run_api(image_path: String):
 	api_save()
 	var image = Global.image_to_base64(image_path)
@@ -63,11 +78,7 @@ func run_api(image_path: String):
 
 func qwen_api():
 	pass
-
-
 ##func qwen_api(image_path, prompt, api_key):
-	## 设置环境变量
-	#os.environ['DASHSCOPE_API_KEY'] = api_key
 #
 	## 构造请求体
 	#var request_body = JSON.stringify({
@@ -130,21 +141,28 @@ func claude_api():
 
 func openai_api():
 	pass
-
-func addition_prompt(text : String, image_path : String):
-	if '{' not in text and '}' not in text:
-		return prompt
-	var file_name = image_path.get_file().rstrip("." + image_path.get_extension()) + ".txt"
-	var dir_path = text.substr(text.find("{")+1, text.find("}")-text.find("{")-1)
-	var full_path = (dir_path + "/" + file_name).simplify_path()
-	var file = FileAccess.open(full_path, FileAccess.READ)
-	var file_content := ""
-	if file:
-		file_content = file.get_as_text()
-		file.close()
-	else:
-		return "Error reading file: Could not open file."
-	return text.replace("{" + dir_path + "}", file_content)
+#data = {
+	#"model": model,
+	#"messages": [
+		#{
+			#"role": "user",
+			#"content":
+			#[
+				#{"type": "image_url", "image_url":
+					#{"url": f"data:image/jpeg;base64,{image_base64}",
+					#"detail": f"{quality}"}
+				#},
+				#{"type": "text", "text": prompt}
+			#]
+		#}
+	#],
+	#"max_tokens": 300
+#}
+#
+#headers = {
+	#"Content-Type": "application/json",
+	#"Authorization": f"Bearer {api_key}"
+#}
 
 func _api_switch_pressed():
 	var mod = API_TYPE[$"../Tab/API Config/API Config/API/Box/ApiList".selected]
