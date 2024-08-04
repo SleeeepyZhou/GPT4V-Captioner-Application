@@ -31,6 +31,45 @@ func readjson():
 		var save_data = readjson()
 		return save_data
 
-func image_to_base64(path : String, qu : float = 1):
+func image_to_base64(path : String, quality : String) -> String:
 	var image = Image.load_from_file(path)
-	return Marshalls.raw_to_base64(image.save_jpg_to_buffer(qu))
+	var target : int = 1024
+	var width = image.get_size().x
+	var height = image.get_size().y
+	if quality:
+		if quality == "high":
+			target = 1024
+		elif quality == "low":
+			target = 512
+		elif quality == "auto":
+			if width >= 1024 or height >= 1024:
+				target = 1024
+			else:
+				target = 512
+	var aspect_ratio = width / height
+	var new_width = width
+	var new_height = height
+	if width > target or height > target:
+		if width > height:
+			new_width = target
+			new_height = int(new_width / aspect_ratio)
+		else:
+			new_height = target
+			new_width = int(new_height * aspect_ratio)
+	image.resize(new_width, new_height)
+	return Marshalls.raw_to_base64(image.save_jpg_to_buffer(1))
+
+func addition_prompt(text : String, image_path : String) -> String:
+	if '{' not in text and '}' not in text:
+		return text
+	var file_name = image_path.get_file().rstrip("." + image_path.get_extension()) + ".txt"
+	var dir_path = text.substr(text.find("{")+1, text.find("}")-text.find("{")-1)
+	var full_path = (dir_path + "/" + file_name).simplify_path()
+	var file = FileAccess.open(full_path, FileAccess.READ)
+	var file_content := ""
+	if file:
+		file_content = file.get_as_text()
+		file.close()
+	else:
+		return "Error reading file: Could not open file."
+	return text.replace("{" + dir_path + "}", file_content)

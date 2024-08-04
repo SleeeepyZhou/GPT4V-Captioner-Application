@@ -649,6 +649,7 @@ bbcode_enabled = true
 text = "Developers: [b][url=https://civitai.com/user/jiayev1]Jiaye[/url]，[url=https://civitai.com/user/LEOSAM]LEOSAM 是只兔狲[/url]，[url=https://github.com/SleeeepyZhou]SleeeepyZhou[/url]，[url=https://civitai.com/user/fok3827]Fok[/url]，[url=https://github.com/327]327[/url]，[url=https://space.bilibili.com/893892]十字鱼[/url]，[url=https://weibo.com/u/6575812492]Vanetta[/url][/b],Welcome everyone to add more new features to this project."
 fit_content = true
 
+[connection signal="text_changed" from="Main/Demo/ApiInput/ApiURL" to="Main/Demo/ApiUtils" method="_on_api_url_text_changed"]
 [connection signal="pressed" from="Main/Demo/PromptSave/Save" to="Main/Demo" method="_prompt_save_pressed"]
 [connection signal="pressed" from="Main/Demo/PromptSave/Delete" to="Main/Demo" method="_prompt_delete_pressed"]
 [connection signal="pressed" from="Main/Demo/PromptSave/Load" to="Main/Demo" method="_prompt_load_pressed"]

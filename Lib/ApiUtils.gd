@@ -27,8 +27,6 @@ func _update():
 	prompt = $"../Prompt".text
 
 const API_TYPE = ["gpt-4o", "qwen-vl-plus", "qwen-vl-max", "claude", "local", "???"]
-const RETRY_ATTEMPTS = 5
-
 func is_api_id(url : String) -> int:
 	if url.ends_with("/v1/services/aigc/multimodal-generation/generation"):
 		return 1
@@ -56,51 +54,69 @@ func api_save():
 	else:
 		dir["api"][mod] = [false, api_url, api_key]
 
-func addition_prompt(text : String, image_path : String):
-	if '{' not in text and '}' not in text:
-		return prompt
-	var file_name = image_path.get_file().rstrip("." + image_path.get_extension()) + ".txt"
-	var dir_path = text.substr(text.find("{")+1, text.find("}")-text.find("{")-1)
-	var full_path = (dir_path + "/" + file_name).simplify_path()
-	var file = FileAccess.open(full_path, FileAccess.READ)
-	var file_content := ""
-	if file:
-		file_content = file.get_as_text()
-		file.close()
-	else:
-		return "Error reading file: Could not open file."
-	return text.replace("{" + dir_path + "}", file_content)
-
+var API_FUNC : Array[Callable] = [Callable(self,"openai_api"), 
+								Callable(self,"qwen_api"), 
+								Callable(self,"qwen_api"), 
+								Callable(self,"claude_api"), 
+								Callable(self,"openai_api"), 
+								Callable(self,"openai_api")]
 func run_api(image_path: String):
 	api_save()
-	var image = Global.image_to_base64(image_path)
-	var current_prompt = addition_prompt(prompt, image_path)
+	var base64image = Global.image_to_base64(image_path, _quality)
+	var current_prompt = Global.addition_prompt(prompt, image_path)
+	API_FUNC[api_mod].call(current_prompt, base64image)
 
-func qwen_api():
-	pass
-##func qwen_api(image_path, prompt, api_key):
-#
-	## 构造请求体
-	#var request_body = JSON.stringify({
-		#"model": QWEN_MOD,
-		#"input": {
-			#"messages": [
-				#{
-					#"role": "system",
-					#"content": [
-						#{"text": "You are a helpful assistant."}
-					#]
-				#},
-				#{
-					#"role": "user",
-					#"content": [
-						#{"image": "file://" + image_path},
-						#{"text": prompt}
-					#]
-				#}
-			#]
-		#}
-	#})
+const RETRY_ATTEMPTS = 5
+func openai_api(inputprompt : String, base64image : String):
+	var data = JSON.stringify({
+		"model": "gpt-4o",
+		"messages": [
+				{
+				"role": "user",
+				"content":
+					[
+						{"type": "image_url", 
+						"image_url":
+							{"url": "data:image/jpeg;base64," + base64image,
+							"detail": _quality}
+						},
+						{"type": "text", "text": inputprompt}
+					]
+				}
+			],
+		"max_tokens": 300
+		})
+	var headers = JSON.stringify({
+		"Content-Type": "application/json",
+		"Authorization": "Bearer " + api_key
+		})
+	
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(self._http_request_completed)
+	var error = http_request.request("https://")
+	if error != OK:
+		push_error("在HTTP请求中发生了一个错误。")
+	var body = JSON.new().stringify({"name": "Godette"})
+	error = http_request.request("https://httpbin.org/post", [], HTTPClient.METHOD_POST, body)
+	if error != OK:
+		push_error("在HTTP请求中发生了一个错误。")
+
+func qwen_api(inputprompt : String, base64image : String):
+	var request_body = JSON.stringify({
+		"model": API_TYPE[api_mod],
+		"input": {
+			"messages": [
+				{"role": "system",
+				"content": [{"text": "You are a helpful assistant."}]
+				},
+				{"role": "user",
+				"content": [{"image": "data:image/jpeg;base64," + base64image},
+						{"text": inputprompt}]
+				}
+						]
+					}
+				})
 #
 	## 创建HTTP请求对象
 	#var http_request = HTTPRequest.new()
@@ -134,35 +150,34 @@ func qwen_api():
 			#print(json_result)
 	#else:
 		#print("Error:", response.get_error_message())
-##
 
 func claude_api():
-	pass
-
-func openai_api():
-	pass
-#data = {
-	#"model": model,
-	#"messages": [
-		#{
-			#"role": "user",
-			#"content":
-			#[
-				#{"type": "image_url", "image_url":
-					#{"url": f"data:image/jpeg;base64,{image_base64}",
-					#"detail": f"{quality}"}
-				#},
-				#{"type": "text", "text": prompt}
-			#]
-		#}
-	#],
-	#"max_tokens": 300
-#}
+	# Claude API
+	#data = {
+		#"model": model,
+		#"max_tokens": 300,
+		#"messages": [
+			#{"role": "user", "content": [
+					#{"type": "image", "source": {
+							#"type": "base64",
+							#"media_type": "image/jpeg",
+							#"data": image_base64
+						#}
+					#},
+					#{"type": "text", "text": prompt}
+				#]  
+			#}
+		#]
+	#}
 #
-#headers = {
-	#"Content-Type": "application/json",
-	#"Authorization": f"Bearer {api_key}"
-#}
+	## print(f"data: {data}\n")
+#
+	#headers = {
+		#"Content-Type": "application/json",
+		#"x-api-key:": api_key,
+		#"anthropic-version": "2023-06-01"
+	#}
+	pass
 
 func _api_switch_pressed():
 	var mod = API_TYPE[$"../Tab/API Config/API Config/API/Box/ApiList".selected]
@@ -191,3 +206,6 @@ func _set_api_default_pressed():
 	save_file.store_string(JSON.stringify(dir))
 	save_file.close()
 	$"../Tab/API Config/API Config/API/Box/ApiState".text = mod + " has been set as default."
+
+func _on_api_url_text_changed(new_text):
+	$"../ApiInput/APIMod".select(is_api_id(new_text))
