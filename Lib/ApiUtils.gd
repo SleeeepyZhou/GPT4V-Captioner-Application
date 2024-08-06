@@ -60,13 +60,13 @@ var API_FUNC : Array[Callable] = [Callable(self,"openai_api"),
 								Callable(self,"claude_api"), 
 								Callable(self,"openai_api"), 
 								Callable(self,"openai_api")]
+const RETRY_ATTEMPTS = 5
 func run_api(image_path: String):
 	api_save()
 	var base64image = Global.image_to_base64(image_path, _quality)
 	var current_prompt = Global.addition_prompt(prompt, image_path)
 	API_FUNC[api_mod].call(current_prompt, base64image)
 
-const RETRY_ATTEMPTS = 5
 func openai_api(inputprompt : String, base64image : String):
 	var data = JSON.stringify({
 		"model": "gpt-4o",
@@ -103,7 +103,7 @@ func openai_api(inputprompt : String, base64image : String):
 		push_error("在HTTP请求中发生了一个错误。")
 
 func qwen_api(inputprompt : String, base64image : String):
-	var request_body = JSON.stringify({
+	var data = JSON.stringify({
 		"model": API_TYPE[api_mod],
 		"input": {
 			"messages": [
@@ -115,8 +115,8 @@ func qwen_api(inputprompt : String, base64image : String):
 						{"text": inputprompt}]
 				}
 						]
-					}
-				})
+				}
+									})
 #
 	## 创建HTTP请求对象
 	#var http_request = HTTPRequest.new()
@@ -130,6 +130,33 @@ func qwen_api(inputprompt : String, base64image : String):
 	#http_request.connect("response_received", self, "_on_http_response_received")
 	#HTTPClient.new().request(http_request)
 #
+
+func claude_api(inputprompt : String, base64image : String):
+	var data = JSON.stringify({
+		"model": "claude_api",
+		"max_tokens": 300,
+		"messages": [{
+					"role": "user", 
+					"content": [{
+							"type": "image", 
+							"source": {"type": "base64",
+									"media_type": "image/jpeg",
+									"data": base64image}
+								},
+								{
+							"type": "text", 
+							"text": inputprompt
+								}]
+					}]
+							})
+	## print(f"data: {data}\n")
+#
+	#headers = {
+		#"Content-Type": "application/json",
+		#"x-api-key:": api_key,
+		#"anthropic-version": "2023-06-01"
+	#}
+
 ## 处理HTTP响应
 #func _on_http_response_received(http_request, response):
 	#if response.get_error() == OK:
@@ -151,33 +178,6 @@ func qwen_api(inputprompt : String, base64image : String):
 	#else:
 		#print("Error:", response.get_error_message())
 
-func claude_api():
-	# Claude API
-	#data = {
-		#"model": model,
-		#"max_tokens": 300,
-		#"messages": [
-			#{"role": "user", "content": [
-					#{"type": "image", "source": {
-							#"type": "base64",
-							#"media_type": "image/jpeg",
-							#"data": image_base64
-						#}
-					#},
-					#{"type": "text", "text": prompt}
-				#]  
-			#}
-		#]
-	#}
-#
-	## print(f"data: {data}\n")
-#
-	#headers = {
-		#"Content-Type": "application/json",
-		#"x-api-key:": api_key,
-		#"anthropic-version": "2023-06-01"
-	#}
-	pass
 
 func _api_switch_pressed():
 	var mod = API_TYPE[$"../Tab/API Config/API Config/API/Box/ApiList".selected]
