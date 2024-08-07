@@ -8,6 +8,18 @@ var time_out : int
 var prompt : String
 
 func _ready():
+	
+	var headers = JSON.stringify({
+		"Content-Type": "application/json",
+		"Authorization": "Bearer "})
+	var data = JSON.stringify({"test" : "test"})
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	var error = http_request.request(api_url, headers, 2, data)
+	if error != OK:
+		push_error("Error")
+	error = http_request.request("https://httpbin.org/post", [], HTTPClient.METHOD_POST, data)
+
 	for type in API_TYPE:
 		$"../Tab/API Config/API Config/API/Box/ApiList".add_item(type)
 		$"../ApiInput/APIMod".add_item(type)
@@ -88,19 +100,40 @@ func openai_api(inputprompt : String, base64image : String):
 		})
 	var headers = JSON.stringify({
 		"Content-Type": "application/json",
-		"Authorization": "Bearer " + api_key
-		})
-	
+		"Authorization": "Bearer " + api_key})
+
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
 	http_request.request_completed.connect(self._http_request_completed)
-	var error = http_request.request("https://")
+	var error = http_request.request(api_url, headers, 2, data)
 	if error != OK:
-		push_error("在HTTP请求中发生了一个错误。")
-	var body = JSON.new().stringify({"name": "Godette"})
-	error = http_request.request("https://httpbin.org/post", [], HTTPClient.METHOD_POST, body)
-	if error != OK:
-		push_error("在HTTP请求中发生了一个错误。")
+		push_error("Error")
+	error = http_request.request("https://httpbin.org/post", [], HTTPClient.METHOD_POST, data)
+
+# 处理HTTP响应
+# request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray)
+# 请求完成时触发。
+#func _on_http_response_received(http_request, response):
+	#if response.get_error() == OK:
+		#var json_result = JSON.parse(response.get_body())
+		#if '"status_code": 400' in json_result:
+			#print("API error: " + json_result)
+			#return
+		#if json_result.get("output") and json_result["output"].get("choices") 
+		#and json_result["output"]["choices"][0].get("message") 
+		#and json_result["output"]["choices"][0]["message"].get("content"):
+			#var content = json_result["output"]["choices"][0]["message"]["content"]
+			#if content[0].get("text", False):
+				#print(content[0]["text"])
+			#else:
+				#var box_value = content[0]["box"]
+				#var text_value = content[1]["text"]
+				#var b_value = re_search(r"<ref>(.*?)</ref>", box_value).get_group(1)
+				#print(b_value + text_value)
+		#else:
+			#print(json_result)
+	#else:
+		#print("Error:", response.get_error_message())
 
 func qwen_api(inputprompt : String, base64image : String):
 	var data = JSON.stringify({
@@ -108,28 +141,16 @@ func qwen_api(inputprompt : String, base64image : String):
 		"input": {
 			"messages": [
 				{"role": "system",
-				"content": [{"text": "You are a helpful assistant."}]
-				},
+				"content": [{"text": "You are a helpful assistant."}]},
 				{"role": "user",
 				"content": [{"image": "data:image/jpeg;base64," + base64image},
-						{"text": inputprompt}]
-				}
+							{"text": inputprompt}]}
 						]
 				}
-									})
-#
-	## 创建HTTP请求对象
-	#var http_request = HTTPRequest.new()
-	#http_request.set_method("POST")
-	#http_request.set_uri(DASHSCOPE_API_URL)
-	#http_request.set_header("Content-Type", "application/json")
-	#http_request.set_header("Authorization", "Bearer " + api_key)
-	#http_request.set_body(request_body)
-#
-	## 发送HTTP请求
-	#http_request.connect("response_received", self, "_on_http_response_received")
-	#HTTPClient.new().request(http_request)
-#
+								})
+	var headers = JSON.stringify({
+		"Content-Type": "application/json",
+		"Authorization": "Bearer " + api_key})
 
 func claude_api(inputprompt : String, base64image : String):
 	var data = JSON.stringify({
@@ -149,34 +170,31 @@ func claude_api(inputprompt : String, base64image : String):
 								}]
 					}]
 							})
-	## print(f"data: {data}\n")
+	var headers = JSON.stringify({
+			"Content-Type": "application/json",
+			"x-api-key:": api_key,
+			"anthropic-version": "2023-06-01"})
+
+#
+	## 创建HTTP请求对象
+	#var http_request = HTTPRequest.new()
+	#http_request.set_method("POST")
+	#http_request.set_uri(DASHSCOPE_API_URL)
+	#http_request.set_header("Content-Type", "application/json")
+	#http_request.set_header("Authorization", "Bearer " + api_key)
+	#http_request.set_body(request_body)
+#
+	## 发送HTTP请求
+	#http_request.connect("response_received", self, "_on_http_response_received")
+	#HTTPClient.new().request(http_request)
+#
+## print(f"data: {data}\n")
 #
 	#headers = {
 		#"Content-Type": "application/json",
 		#"x-api-key:": api_key,
 		#"anthropic-version": "2023-06-01"
 	#}
-
-## 处理HTTP响应
-#func _on_http_response_received(http_request, response):
-	#if response.get_error() == OK:
-		#var json_result = JSON.parse(response.get_body())
-		#if '"status_code": 400' in json_result:
-			#print("API error: " + json_result)
-			#return
-		#if json_result.get("output") and json_result["output"].get("choices") and json_result["output"]["choices"][0].get("message") and json_result["output"]["choices"][0]["message"].get("content"):
-			#var content = json_result["output"]["choices"][0]["message"]["content"]
-			#if content[0].get("text", False):
-				#print(content[0]["text"])
-			#else:
-				#var box_value = content[0]["box"]
-				#var text_value = content[1]["text"]
-				#var b_value = re_search(r"<ref>(.*?)</ref>", box_value).get_group(1)
-				#print(b_value + text_value)
-		#else:
-			#print(json_result)
-	#else:
-		#print("Error:", response.get_error_message())
 
 
 func _api_switch_pressed():
