@@ -9,17 +9,35 @@ var prompt : String
 
 func _ready():
 	
-	var headers = JSON.stringify({
-		"Content-Type": "application/json",
-		"Authorization": "Bearer "})
-	var data = JSON.stringify({"test" : "test"})
+	var data = JSON.stringify({
+		"model": "gpt-4o",
+		"messages": [
+				{
+				"role": "user",
+				"content":
+					[
+						{"type": "image_url", 
+						"image_url":
+							{"url": "data:image/jpeg;base64," + Global.image_to_base64("F:/WorkData/aiyinsitan.jpg", "auto"),
+							"detail": "auto"}
+						},
+						{"type": "text", "text": "Hi, this is a test."}
+					]
+				}
+			],
+		"max_tokens": 300
+		})
+	var headers = ["Content-Type: application/json", 
+					"Authorization: Bearer "]
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
-	var error = http_request.request(api_url, headers, 2, data)
+	http_request.timeout = time_out
+	http_request.request_completed.connect(_on_openai_received)
+	var error = http_request.request("http://127.0.0.1:8000/v1/chat/completions", headers, HTTPClient.METHOD_POST, data)
 	if error != OK:
-		push_error("Error")
-	error = http_request.request("https://httpbin.org/post", [], HTTPClient.METHOD_POST, data)
-
+		print("Error: ", error)
+	print(http_request.get_http_client_status())
+		
 	for type in API_TYPE:
 		$"../Tab/API Config/API Config/API/Box/ApiList".add_item(type)
 		$"../ApiInput/APIMod".add_item(type)
@@ -98,42 +116,22 @@ func openai_api(inputprompt : String, base64image : String):
 			],
 		"max_tokens": 300
 		})
-	var headers = JSON.stringify({
-		"Content-Type": "application/json",
-		"Authorization": "Bearer " + api_key})
-
+	var headers = ["Content-Type: application/json", 
+					"Authorization: Bearer " + api_key]
+	
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
-	http_request.request_completed.connect(self._http_request_completed)
-	var error = http_request.request(api_url, headers, 2, data)
+	http_request.timeout = time_out
+	http_request.request_completed.connect(_on_openai_received)
+	var error = http_request.request(api_url, headers, HTTPClient.METHOD_POST, data)
 	if error != OK:
-		push_error("Error")
-	error = http_request.request("https://httpbin.org/post", [], HTTPClient.METHOD_POST, data)
-
-# 处理HTTP响应
-# request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray)
-# 请求完成时触发。
-#func _on_http_response_received(http_request, response):
-	#if response.get_error() == OK:
-		#var json_result = JSON.parse(response.get_body())
-		#if '"status_code": 400' in json_result:
-			#print("API error: " + json_result)
-			#return
-		#if json_result.get("output") and json_result["output"].get("choices") 
-		#and json_result["output"]["choices"][0].get("message") 
-		#and json_result["output"]["choices"][0]["message"].get("content"):
-			#var content = json_result["output"]["choices"][0]["message"]["content"]
-			#if content[0].get("text", False):
-				#print(content[0]["text"])
-			#else:
-				#var box_value = content[0]["box"]
-				#var text_value = content[1]["text"]
-				#var b_value = re_search(r"<ref>(.*?)</ref>", box_value).get_group(1)
-				#print(b_value + text_value)
-		#else:
-			#print(json_result)
-	#else:
-		#print("Error:", response.get_error_message())
+		print("Error: ", error)
+	#print(http_request.get_http_client_status())
+func _on_openai_received(result, response_code, headers, body):
+	var json = JSON.new()
+	var json_result = json.parse_string(body.get_string_from_utf8())
+	var answer = json_result["choices"][0]["message"]["content"]
+	print(answer)
 
 func qwen_api(inputprompt : String, base64image : String):
 	var data = JSON.stringify({
@@ -148,9 +146,36 @@ func qwen_api(inputprompt : String, base64image : String):
 						]
 				}
 								})
-	var headers = JSON.stringify({
-		"Content-Type": "application/json",
-		"Authorization": "Bearer " + api_key})
+	var headers = ["Authorization: Bearer " + api_key,
+				"Content-Type: application/json"]
+	
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.timeout = time_out
+	http_request.request_completed.connect(_on_qwen_received)
+	var error = http_request.request(api_url, headers, HTTPClient.METHOD_POST, data)
+	if error != OK:
+		print("Error: ", error)
+	#print(http_request.get_http_client_status())
+func _on_qwen_received(result, response_code, headers, body):
+	var json = JSON.new()
+	var response : String = body.get_string_from_utf8() 
+	var json_result = json.parse_string(response)
+	if "error" in response:
+		return
+	if json_result != null:
+		var answer = ""
+		# 安全地尝试
+		if json_result.has("output") and\
+			json_result["output"].has("choices") and\
+			json_result["output"]["choices"].size() > 0 and\
+			json_result["output"]["choices"][0].has("message") and\
+			json_result["output"]["choices"][0]["message"].has("content") and\
+			json_result["output"]["choices"][0]["message"]["content"].size() > 0 and\
+			json_result["output"]["choices"][0]["message"]["content"][0].has("text"):
+			answer = json_result["output"]["choices"][0]["message"]["content"][0]["text"]
+		else:
+			answer = json_result
 
 func claude_api(inputprompt : String, base64image : String):
 	var data = JSON.stringify({
@@ -170,32 +195,22 @@ func claude_api(inputprompt : String, base64image : String):
 								}]
 					}]
 							})
-	var headers = JSON.stringify({
-			"Content-Type": "application/json",
-			"x-api-key:": api_key,
-			"anthropic-version": "2023-06-01"})
-
-#
-	## 创建HTTP请求对象
-	#var http_request = HTTPRequest.new()
-	#http_request.set_method("POST")
-	#http_request.set_uri(DASHSCOPE_API_URL)
-	#http_request.set_header("Content-Type", "application/json")
-	#http_request.set_header("Authorization", "Bearer " + api_key)
-	#http_request.set_body(request_body)
-#
-	## 发送HTTP请求
-	#http_request.connect("response_received", self, "_on_http_response_received")
-	#HTTPClient.new().request(http_request)
-#
-## print(f"data: {data}\n")
-#
-	#headers = {
-		#"Content-Type": "application/json",
-		#"x-api-key:": api_key,
-		#"anthropic-version": "2023-06-01"
-	#}
-
+	var headers = ["Content-Type: application/json",
+			"x-api-key:" + api_key,
+			"anthropic-version: 2023-06-01"]
+	
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.timeout = time_out
+	http_request.request_completed.connect(_on_claude_received)
+	var error = http_request.request(api_url, headers, HTTPClient.METHOD_POST, data)
+	if error != OK:
+		print("Error: ", error)
+	#print(http_request.get_http_client_status())
+func _on_claude_received(result, response_code, headers, body):
+	var json = JSON.new()
+	var json_result = json.parse_string(body.get_string_from_utf8())
+	var answer = json_result["content"][0]["text"]
 
 func _api_switch_pressed():
 	var mod = API_TYPE[$"../Tab/API Config/API Config/API/Box/ApiList".selected]

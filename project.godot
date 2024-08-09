@@ -25,6 +25,10 @@ Global="*res://Lib/GlobalLib.gd"
 window/size/viewport_width=1400
 window/size/viewport_height=720
 
+[network]
+
+limits/packet_peer_stream/max_buffer_po2=64
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
